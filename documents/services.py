@@ -23,6 +23,10 @@ def extract_ocr(uploaded_file):
         import pytesseract
         from django.core.files.storage import default_storage
 
+        configured_tesseract = os.getenv("TESSERACT_CMD", r"C:\Program Files\Tesseract-OCR\tesseract.exe")
+        if Path(configured_tesseract).exists():
+            pytesseract.pytesseract.tesseract_cmd = configured_tesseract
+
         with default_storage.open(uploaded_file.name, "rb") as source:
             content = source.read()
         extension = Path(uploaded_file.name).suffix.lower()
