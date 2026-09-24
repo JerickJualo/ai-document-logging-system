@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block title %}Process Document | Office Correspondence{% endblock %}
+{% block content %}
+<p class="eyebrow mb-1">Processing pipeline</p><h1 class="h3 mb-3">Process Document</h1>
+<div class="card border-0 shadow-sm"><div class="card-body p-4"><dl class="row"><dt class="col-sm-3">File</dt><dd class="col-sm-9">{{ document.filename }}</dd><dt class="col-sm-3">Status</dt><dd class="col-sm-9">File uploaded and ready</dd></dl><ol class="list-group list-group-numbered mb-4"><li class="list-group-item">File uploaded</li><li class="list-group-item">PDF/image prepared</li><li class="list-group-item">Local OCR attempted</li><li class="list-group-item">AI-assisted extraction attempted</li><li class="list-group-item">Ready for human review</li></ol><form method="post">{% csrf_token %}<button class="btn btn-primary" type="submit">Process Document</button></form></div></div>
+{% endblock %}

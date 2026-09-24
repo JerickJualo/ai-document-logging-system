@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Login | Office Correspondence{% endblock %}
+{% block unauthenticated_content %}
+<main class="login-shell d-flex align-items-center justify-content-center">
+    <section class="card login-card shadow-sm border-0">
+        <div class="card-body p-4 p-md-5">
+            <p class="eyebrow mb-2">Provincial Agriculture Office</p>
+            <h1 class="h3 mb-2">Document Logging System</h1>
+            <p class="text-secondary mb-4">Sign in to manage incoming office correspondence.</p>
+            {% if form.errors %}<div class="alert alert-danger">Please check your username and password.</div>{% endif %}
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3"><label class="form-label" for="id_username">Username</label>{{ form.username }}</div>
+                <div class="mb-4"><label class="form-label" for="id_password">Password</label>{{ form.password }}</div>
+                <button class="btn btn-primary w-100" type="submit">Sign in</button>
+            </form>
+            <p class="small text-secondary mt-4 mb-0">Prototype demonstration — extracted information requires human verification.</p>
+        </div>
+    </section>
+</main>
+{% endblock %}

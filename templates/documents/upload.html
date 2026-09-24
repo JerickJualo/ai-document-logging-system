@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block title %}New Document | Office Correspondence{% endblock %}
+{% block content %}
+<p class="eyebrow mb-1">Input layer</p><h1 class="h3 mb-3">New Document</h1>
+<div class="alert alert-info">The uploaded PDF or image represents the scanned output of the office scanner. This prototype does not control the Brother DCP-T720DW.</div>
+<div class="card border-0 shadow-sm"><div class="card-body p-4"><form method="post" enctype="multipart/form-data">{% csrf_token %}{{ form.non_field_errors }}<label class="form-label" for="id_file">Scanned document</label>{{ form.file }}{% for error in form.file.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}<div class="form-text mb-4">Accepted: PDF, JPG, JPEG, PNG. Maximum size: 10 MB.</div><button class="btn btn-primary" type="submit">Upload and Continue</button></form></div></div>
+{% endblock %}

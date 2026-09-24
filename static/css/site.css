@@ -1,0 +1,12 @@
+:root { --app-navy: #17324d; --app-blue: #2563eb; }
+body { color: #203040; }
+.app-navbar { background: var(--app-navy); }
+.login-shell { min-height: calc(100vh - 56px); padding: 2rem 1rem; }
+.login-card { width: min(100%, 460px); }
+.eyebrow { color: var(--app-blue); font-size: .75rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.stat-card { background: #fff; border: 1px solid #e5eaf0; border-radius: .75rem; box-shadow: 0 .125rem .25rem rgba(0,0,0,.04); padding: 1.25rem; }
+.stat-card span, .stat-card small { display: block; color: #667789; }
+.stat-card strong { display: block; color: var(--app-navy); font-size: 2rem; line-height: 1.2; margin: .35rem 0; }
+input[type="text"], input[type="password"] { display: block; width: 100%; padding: .65rem .75rem; border: 1px solid #ced7e0; border-radius: .375rem; }
+.ocr-box { background: #f7f9fb; border: 1px solid #e5eaf0; border-radius: .5rem; max-height: 28rem; overflow: auto; padding: 1rem; white-space: pre-wrap; }
+.document-preview { border: 1px solid #e5eaf0; border-radius: .5rem; height: 24rem; width: 100%; }
