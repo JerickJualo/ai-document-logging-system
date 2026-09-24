@@ -66,8 +66,15 @@ def review_document(request, pk):
     document = user_document(request, pk)
     form = DocumentReviewForm(request.POST or None, instance=document)
     if request.method == "POST" and form.is_valid():
-        form.save()
-        messages.success(request, "Document draft saved for review.")
+        document = form.save(commit=False)
+        if request.POST.get("action") == "finalize":
+            document.status = Document.Status.FINALIZED
+            message = "Document finalized and added to the official records."
+        else:
+            document.status = Document.Status.FOR_REVIEW
+            message = "Document draft saved for review."
+        document.save()
+        messages.success(request, message)
         return redirect("review-document", pk=document.pk)
     return render(request, "documents/review.html", {
         "document": document,
@@ -79,7 +86,32 @@ def review_document(request, pk):
 @login_required
 def records(request):
     query = request.GET.get("q", "").strip()
+    status = request.GET.get("status", "").strip()
+    document_type = request.GET.get("document_type", "").strip()
+    date_received = request.GET.get("date_received", "").strip()
     documents = Document.objects.filter(created_by=request.user)
     if query:
-        documents = documents.filter(Q(sender__icontains=query) | Q(subject__icontains=query) | Q(originating_office__icontains=query) | Q(document_type__icontains=query))
-    return render(request, "documents/records.html", {"documents": documents, "query": query})
+        documents = documents.filter(Q(sender__icontains=query) | Q(subject__icontains=query) | Q(originating_office__icontains=query) | Q(document_type__icontains=query) | Q(keywords__icontains=query))
+    if status:
+        documents = documents.filter(status=status)
+    if document_type:
+        documents = documents.filter(document_type__icontains=document_type)
+    if date_received:
+        documents = documents.filter(date_received=date_received)
+    return render(request, "documents/records.html", {
+        "documents": documents,
+        "query": query,
+        "status": status,
+        "document_type": document_type,
+        "date_received": date_received,
+        "status_choices": Document.Status.choices,
+    })
+
+
+@login_required
+def document_detail(request, pk):
+    document = user_document(request, pk)
+    return render(request, "documents/detail.html", {
+        "document": document,
+        "is_pdf": document.filename.lower().endswith(".pdf"),
+    })
