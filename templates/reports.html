@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block title %}Reports | Office Correspondence{% endblock %}
+{% block content %}
+<p class="eyebrow mb-1">Reporting</p><h1 class="h3 mb-3">Incoming Correspondence Report</h1>
+<form class="row g-2 align-items-end mb-4"><div class="col-md-3"><label class="form-label" for="start_date">Start date</label><input class="form-control" id="start_date" type="date" name="start_date" value="{{ start_date|date:'Y-m-d' }}"></div><div class="col-md-3"><label class="form-label" for="end_date">End date</label><input class="form-control" id="end_date" type="date" name="end_date" value="{{ end_date|date:'Y-m-d' }}"></div><div class="col-auto"><button class="btn btn-primary">Generate</button></div><div class="col-auto"><button class="btn btn-outline-secondary" name="format" value="csv">Download CSV</button></div></form>
+<div class="alert alert-light border">Reporting period: <strong>{{ start_date|date:'M d, Y' }}</strong> to <strong>{{ end_date|date:'M d, Y' }}</strong> · Total documents: <strong>{{ total_documents }}</strong></div>
+<div class="card border-0 shadow-sm"><div class="table-responsive"><table class="table mb-0"><thead><tr><th>Date Received</th><th>Sender</th><th>Subject</th><th>Type</th><th>Status</th></tr></thead><tbody>{% for document in documents %}<tr><td>{{ document.date_received|date:'M d, Y' }}</td><td>{{ document.sender|default:'—' }}</td><td>{{ document.subject|default:document.filename }}</td><td>{{ document.document_type|default:'—' }}</td><td>{{ document.status }}</td></tr>{% empty %}<tr><td colspan="5" class="text-center text-secondary py-4">No documents found for this period.</td></tr>{% endfor %}</tbody></table></div></div>
+{% endblock %}

@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block title %}User Management | Office Correspondence{% endblock %}
+{% block content %}
+<p class="eyebrow mb-1">Administrator</p><h1 class="h3 mb-3">User Management</h1>
+<div class="row g-4"><div class="col-lg-5"><div class="card border-0 shadow-sm"><div class="card-body"><h2 class="h5">Create User</h2><form method="post">{% csrf_token %}{{ form.as_p }}<button class="btn btn-primary" type="submit">Create Account</button></form></div></div></div><div class="col-lg-7"><div class="card border-0 shadow-sm"><div class="table-responsive"><table class="table mb-0"><thead><tr><th>Username</th><th>Role</th><th>Status</th><th></th></tr></thead><tbody>{% for account in users %}<tr><td>{{ account.username }}</td><td>{% if account.is_staff %}Administrator{% else %}Office Personnel{% endif %}</td><td>{% if account.is_active %}Active{% else %}Inactive{% endif %}</td><td>{% if account != user and not account.is_superuser %}<form method="post">{% csrf_token %}<input type="hidden" name="action" value="toggle"><input type="hidden" name="user_id" value="{{ account.pk }}"><button class="btn btn-sm btn-outline-secondary">Toggle</button></form>{% endif %}</td></tr>{% endfor %}</tbody></table></div></div></div></div>
+{% endblock %}

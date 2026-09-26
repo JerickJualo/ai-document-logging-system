@@ -12,5 +12,9 @@ urlpatterns = [
     path("", include("documents.urls")),
 ]
 
+handler403 = "documents.views.permission_denied"
+handler404 = "documents.views.page_not_found"
+handler500 = "documents.views.server_error"
+
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

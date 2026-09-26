@@ -10,4 +10,6 @@ urlpatterns = [
     path("documents/<int:pk>/review/", views.review_document, name="review-document"),
     path("documents/<int:pk>/", views.document_detail, name="document-detail"),
     path("documents/", views.records, name="records"),
+    path("reports/", views.reports, name="reports"),
+    path("users/", views.user_management, name="user-management"),
 ]

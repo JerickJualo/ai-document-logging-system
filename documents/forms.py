@@ -1,6 +1,9 @@
 from pathlib import Path
 
 from django import forms
+from django.conf import settings
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.models import User
 
 from .models import Document
 
@@ -20,8 +23,18 @@ class DocumentUploadForm(forms.ModelForm):
             raise forms.ValidationError("Upload a PDF, JPG, JPEG, or PNG file.")
         if uploaded_file.size == 0:
             raise forms.ValidationError("The uploaded file is empty.")
-        if uploaded_file.size > 10 * 1024 * 1024:
-            raise forms.ValidationError("The maximum file size is 10 MB.")
+        if uploaded_file.size > settings.MAX_UPLOAD_SIZE_MB * 1024 * 1024:
+            raise forms.ValidationError(f"The maximum file size is {settings.MAX_UPLOAD_SIZE_MB} MB.")
+        header = uploaded_file.read(12)
+        uploaded_file.seek(0)
+        signatures = {
+            ".pdf": header.startswith(b"%PDF"),
+            ".jpg": header.startswith(b"\xff\xd8\xff"),
+            ".jpeg": header.startswith(b"\xff\xd8\xff"),
+            ".png": header.startswith(b"\x89PNG\r\n\x1a\n"),
+        }
+        if not signatures[extension]:
+            raise forms.ValidationError("The file contents do not match its extension or the file is corrupted.")
         return uploaded_file
 
 
@@ -51,3 +64,18 @@ class DocumentReviewForm(forms.ModelForm):
         if commit:
             document.save()
         return document
+
+
+class PrototypeUserCreationForm(UserCreationForm):
+    role = forms.ChoiceField(choices=(("personnel", "Office Personnel"), ("administrator", "Administrator")))
+
+    class Meta:
+        model = User
+        fields = ("username", "first_name", "last_name", "email", "role", "password1", "password2")
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.is_staff = self.cleaned_data["role"] == "administrator"
+        if commit:
+            user.save()
+        return user
