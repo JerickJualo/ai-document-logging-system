@@ -1,6 +1,7 @@
 from django.test import SimpleTestCase
+from unittest.mock import MagicMock, patch
 
-from .services import _fallback_extraction
+from .services import _fallback_extraction, extract_fields
 
 
 class DemoFallbackExtractionTests(SimpleTestCase):
@@ -30,3 +31,14 @@ class DemoFallbackExtractionTests(SimpleTestCase):
         )
         self.assertEqual(result["document_type"], "Memorandum")
         self.assertEqual(result["subject"], "Staff meeting")
+
+    @patch.dict("os.environ", {"AI_PROVIDER": "gemini", "GEMINI_API_KEY": "test-key", "GEMINI_MODEL": "test-model"}, clear=False)
+    @patch("google.genai.Client")
+    def test_gemini_structured_response_is_normalized(self, client_class):
+        client = client_class.return_value
+        client.models.generate_content.return_value = MagicMock(text='{"sender":"Maria Santos","keywords":["request"]}')
+        result, source, warning = extract_fields("A fabricated request letter")
+        self.assertEqual(source, "GEMINI")
+        self.assertIsNone(warning)
+        self.assertEqual(result["sender"], "Maria Santos")
+        self.assertEqual(result["keywords"], ["request"])

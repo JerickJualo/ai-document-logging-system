@@ -199,8 +199,81 @@ def _schema():
     }
 
 
+def _normalize_extraction_data(data):
+    if not isinstance(data, dict):
+        raise ValueError("AI response was not an object")
+    normalized = {field: data.get(field, "") for field in (
+        "date_received", "date_of_document", "sender", "originating_office",
+        "subject", "document_type", "important_details", "summary",
+    )}
+    normalized["keywords"] = data.get("keywords", [])
+    if not isinstance(normalized["keywords"], list):
+        raise ValueError("AI returned invalid keywords")
+    normalized["keywords"] = [str(keyword).strip() for keyword in normalized["keywords"] if str(keyword).strip()]
+    for field in normalized:
+        if field != "keywords" and normalized[field] is None:
+            normalized[field] = ""
+        elif field != "keywords" and not isinstance(normalized[field], str):
+            normalized[field] = str(normalized[field])
+    return normalized
+
+
+def _gemini_schema():
+    schema = _schema().copy()
+    schema.pop("additionalProperties", None)
+    return schema
+
+
+def _gemini_extraction(ocr_text, api_key, model):
+    from google import genai
+    from google.genai import types
+
+    client = genai.Client(api_key=api_key)
+    prompt = """You are an AI-assisted document logging assistant.
+
+Extract information from OCR text from an incoming office correspondence document.
+
+Rules:
+1. Extract only information supported by the document.
+2. Do not invent facts or guess missing information.
+3. Use an empty string when information is unavailable.
+4. Preserve names and office names accurately.
+5. Distinguish the sender from the originating office when possible.
+6. Determine the document type from the content and wording.
+7. Create a concise factual summary of the main purpose and important actions, dates, or requests.
+8. Generate useful keywords supported by the document.
+9. The result is a draft and must be reviewed by office personnel.
+
+Return only the requested structured fields.
+
+OCR TEXT:
+""" + ocr_text
+    response = client.models.generate_content(
+        model=model,
+        contents=prompt,
+        config=types.GenerateContentConfig(
+            response_mime_type="application/json",
+            response_schema=_gemini_schema(),
+        ),
+    )
+    response_text = getattr(response, "text", "")
+    if not response_text:
+        raise ValueError("Gemini returned an empty response")
+    return _normalize_extraction_data(json.loads(response_text))
+
+
 def extract_fields(ocr_text):
     provider = os.getenv("AI_PROVIDER", "demo").lower()
+    if provider == "gemini":
+        api_key = os.getenv("GEMINI_API_KEY", "")
+        model = os.getenv("GEMINI_MODEL", "")
+        if not api_key or not model:
+            return _fallback_extraction(ocr_text), "DEMO/FALLBACK", "Gemini is not fully configured; demo extraction was used."
+        try:
+            return _gemini_extraction(ocr_text, api_key, model), "GEMINI", None
+        except Exception as exc:
+            return _fallback_extraction(ocr_text), "DEMO/FALLBACK", f"Gemini processing failed; demo extraction was used ({exc})."
+
     api_key = os.getenv("AI_API_KEY", "")
     model = os.getenv("AI_MODEL", "")
     if provider != "openai" or not api_key or not model:
@@ -217,10 +290,7 @@ def extract_fields(ocr_text):
             ],
             text={"format": {"type": "json_schema", "name": "office_correspondence", "strict": True, "schema": _schema()}},
         )
-        data = json.loads(response.output_text)
-        if not isinstance(data.get("keywords"), list):
-            raise ValueError("AI returned invalid keywords")
-        return data, "OPENAI", None
+        return _normalize_extraction_data(json.loads(response.output_text)), "OPENAI", None
     except Exception as exc:
         return _fallback_extraction(ocr_text), "DEMO/FALLBACK", f"AI processing failed; demo extraction was used ({exc})."
 
