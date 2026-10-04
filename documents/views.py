@@ -15,7 +15,9 @@ from .services import extract_fields, extract_ocr, parse_date
 
 
 def user_document(request, pk):
-    return get_object_or_404(Document, pk=pk, created_by=request.user)
+    # Document records are shared across authenticated office users.
+    # created_by remains the audit attribution for who logged the document.
+    return get_object_or_404(Document, pk=pk)
 
 
 def admin_required(view_func):
@@ -30,7 +32,7 @@ def admin_required(view_func):
 
 @login_required
 def dashboard(request):
-    documents = Document.objects.filter(created_by=request.user)
+    documents = Document.objects.all()
     context = {
         "total_documents": documents.count(),
         "for_review": documents.filter(status=Document.Status.FOR_REVIEW).count(),
@@ -104,7 +106,7 @@ def records(request):
     status = request.GET.get("status", "").strip()
     document_type = request.GET.get("document_type", "").strip()
     date_received = request.GET.get("date_received", "").strip()
-    documents = Document.objects.filter(created_by=request.user)
+    documents = Document.objects.all()
     if query:
         documents = documents.filter(Q(sender__icontains=query) | Q(subject__icontains=query) | Q(originating_office__icontains=query) | Q(document_type__icontains=query) | Q(keywords__icontains=query))
     if status:
@@ -137,7 +139,7 @@ def reports(request):
     today = date.today()
     start_date = parse_date(request.GET.get("start_date", "")) or (today - timedelta(days=6))
     end_date = parse_date(request.GET.get("end_date", "")) or today
-    documents = Document.objects.filter(created_by=request.user, date_received__range=(start_date, end_date))
+    documents = Document.objects.filter(date_received__range=(start_date, end_date))
     if request.GET.get("format") == "csv":
         response = HttpResponse(content_type="text/csv")
         response["Content-Disposition"] = f'attachment; filename="incoming-correspondence-{start_date}-{end_date}.csv"'

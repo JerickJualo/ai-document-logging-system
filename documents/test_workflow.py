@@ -53,3 +53,15 @@ class WorkflowTests(TestCase):
         self.assertEqual(response.status_code, 302)
         document.refresh_from_db()
         self.assertEqual(document.status, Document.Status.FINALIZED)
+
+    def test_document_created_by_one_user_is_visible_to_another_user(self):
+        document = Document.objects.create(
+            created_by=self.admin,
+            filename="shared-letter.pdf",
+            subject="Shared office record",
+            status=Document.Status.FINALIZED,
+        )
+        self.client.login(username="personnel", password="test-password-123")
+        self.assertContains(self.client.get(reverse("records")), "Shared office record")
+        self.assertContains(self.client.get(reverse("dashboard")), "Shared office record")
+        self.assertEqual(self.client.get(reverse("document-detail", args=[document.pk])).status_code, 200)
